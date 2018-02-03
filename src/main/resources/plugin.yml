@@ -1,0 +1,46 @@
+name: "FusionTP"
+author: "Lord_Fusion"
+version: "1.0"
+
+main: "io.github.lordfusion.FusionTP.FusionTP"
+softdepend: [Multiverse]
+
+commands:
+  fusiontp:
+    description: "Teleport one player to another player. (ONLINE ONLY)"
+    usage: /<command> [player] [player]
+    permission: FusionTP.directto
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [ftp]
+  fusiontphere:
+    description: "Teleport a player to you. (ONLINE ONLY)"
+    usage: /<command> [player]
+    permission: FusionTP.directhere
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [ftphere, ftph]
+
+  fusiontpa:
+    description: "Request to teleport to another player."
+    usage: /<command> [player]
+    permission: FusionTP.request
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [ftpa]
+  fusiontpahere:
+    description: "Request another player to teleport to you."
+    usage: /<command> [player]
+    permission: FusionTP.requesthere
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [ftpah, ftpahere]
+
+  fusiontpaccept:
+    description: "Accept a pending teleport request."
+    usage: /<command>
+    permission: FusionTP.accept
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [ftpaccept]
+  fusiontpdeny:
+    description: "Deny a pending teleport request."
+    usage: /<command>
+    permission: FusionTP.deny
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [ftpdeny]
