@@ -1,10 +1,12 @@
 package io.github.lordfusion.fusiontp;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
@@ -17,7 +19,7 @@ public final class FusionTP extends JavaPlugin
 {
     public void onEnable()
     {
-        getLogger().info("[FusionTP] What's up boys and girls, it's ya boi, FusionTP.");
+        getLogger().info("What's up boys and girls, it's ya boi, FusionTP.");
         getServer().getPluginManager().registerEvents(new ListenerHandler(), this);
     }
     
@@ -34,135 +36,156 @@ public final class FusionTP extends JavaPlugin
     {
         /* Force TP */
         if (cmd.getName().equalsIgnoreCase("fusiontp")) {
-            if (args.length == 1) { // Teleport the sender to the specified player.
-                // The command sender must be an online player.
-                OfflinePlayer cmdSender = findPlayer(sender.getName());
-                if (cmdSender == null || !cmdSender.isOnline()) {
-                    sender.sendMessage("[FTP] Error: You are not an online player!");
-                    return false;
-                }
-                Player origin = cmdSender.getPlayer();
-                // Specified player must not be the sender.
-                OfflinePlayer foundPlayer = findPlayer(args[0]);
-                if (foundPlayer == null) {
-                    sender.sendMessage("[FTP] Player '" + args[0] + "' was not found!");
-                    return true;
-                }
-                if (origin.getName().equalsIgnoreCase(foundPlayer.getName())) {
-                    sender.sendMessage("[FTP] You can't teleport to yourself!");
-                    return false;
-                }
-                // Specified player must be online.
-                if (!foundPlayer.isOnline()) {
-                    sender.sendMessage("[FTP] '" + foundPlayer.getName() + "' is not online!");
-                    return true;
-                }
-                Player destination = foundPlayer.getPlayer();
-                // Teleport the sender to the specified player.
-                if (onlineTeleport(origin, destination.getLocation())) {
-                    sender.sendMessage("[FTP] Teleported to '" + destination.getName() + "'.");
-                    return true;
+            if (args.length == 1) // Teleport the sender to the specified player.
+                return(fusionTeleport(sender, sender.getName(), args[0]));
+            else if (args.length == 2) { // Teleport the first player to the second player.
+                OfflinePlayer destinationPlayer = findPlayer(args[1]);
+                if (destinationPlayer != null && destinationPlayer.getName().equalsIgnoreCase(sender.getName())) {
+                    Permission perm = getServer().getPluginManager().getPermission("FusionTP.direct.here");
+                    if (!sender.hasPermission(perm)) {
+                        sender.sendMessage("[FSN-TP] Nice try! You don't have " + perm.toString());
+                        return false;
+                    }
                 } else {
-                    sender.sendMessage("[FTP] An error occurred during teleportation.");
-                    return true;
-                }
-            } else if (args.length == 2) { // Teleport the first player to the second player.
-                // Verify both parameters are online players.
-                
-                // If the second player is the sender, verify the sender has the TP Here permission.
-                
-                // Teleport the first player to the second player.
-                // The origin must be an online player.
-                OfflinePlayer foundOrigin = findPlayer(args[0]);
-                if (foundOrigin == null) {
-                    sender.sendMessage("[FTP] Player '" + args[0] + "' is not valid!");
-                    return false;
-                } else if (!foundOrigin.isOnline()) {
-                    sender.sendMessage("[FTP] Player '" + foundOrigin.getName() + "' is not online!");
-                    return true;
-                }
-                Player origin = foundOrigin.getPlayer();
-                // The destination must be an online player.
-                OfflinePlayer foundDestination = findPlayer(args[1]);
-                if (foundDestination == null) {
-                    sender.sendMessage("[FTP] Player '" + args[0] + "' is not valid!");
-                    return false;
-                } else if (!foundDestination.isOnline()) {
-                    sender.sendMessage("[FTP] Player '" + foundDestination.getName() + "' is not online!");
-                    return true;
-                }
-                Player destination = foundDestination.getPlayer();
-                // If the destination is the sender, make sure they have the TPHere permission.
-                if (destination.getName().equalsIgnoreCase(sender.getName()) && !sender.hasPermission("FusionTP.direct.here")) {
-                    sender.sendMessage("[FTP] You aren't allowed to teleport players to you!");
-                    return true;
-                }
-                // Teleport the origin to the destination.
-                if (onlineTeleport(origin, destination.getLocation())) {
-                    sender.sendMessage("[FTP] Teleported '" + origin.getName() + "' to '" + destination.getName() + "'.");
-                    return true;
-                } else {
-                    sender.sendMessage("[FTP] An error occurred during teleportation.");
-                    return true;
+                    return(fusionTeleport(sender, args[0], args[1]));
                 }
             }
             return false;
         }
         /* Force TP Here */
         else if (cmd.getName().equalsIgnoreCase("fusiontphere")) {
-            if (args.length == 1) {
-                // The command sender must be an online player.
-                OfflinePlayer cmdSender = findPlayer(sender.getName());
-                if (cmdSender == null || !cmdSender.isOnline()) {
-                    sender.sendMessage("[FTP] Error: You are not an online player!");
-                    return false;
-                }
-                Player destination = cmdSender.getPlayer();
-                // Specified player must not be the sender.
-                OfflinePlayer foundPlayer = findPlayer(args[0]);
-                if (foundPlayer == null) {
-                    sender.sendMessage("[FTP] Player '" + args[0] + "' was not found!");
-                    return true;
-                }
-                Player origin = foundPlayer.getPlayer();
-                if (origin.getName().equalsIgnoreCase(sender.getName())) {
-                    sender.sendMessage("[FTP] You can't teleport to yourself!");
-                    return false;
-                }
-                // Specified player must be online.
-                if (!foundPlayer.isOnline()) {
-                    sender.sendMessage("[FTP] '" + foundPlayer.getName() + "' is not online!");
-                    return true;
-                }
-                // Teleport the sender to the specified player.
-                if (onlineTeleport(origin, destination.getLocation())) {
-                    sender.sendMessage("[FTP] Teleported '" + origin.getName() + "' to you.");
-                    return true;
-                } else {
-                    sender.sendMessage("[FTP] An error occurred during teleportation.");
-                    return true;
-                }
-            }
+            if (args.length == 1)
+                return(fusionTeleport(sender, args[0], sender.getName()));
+            return false;
+        }
+        /* Force TP to Spawn */
+        else if (cmd.getName().equalsIgnoreCase("fusionspawntp")) {
+            if (args.length == 1)
+                return(spawnTeleport(sender, args[0]));
             return false;
         }
         /* Request TP */
         else if (cmd.getName().equalsIgnoreCase("fusiontpa")) {
-            
+            sender.sendMessage("Fusion TPA is not ready yet!");
         }
         /* Request TP Here */
         else if (cmd.getName().equalsIgnoreCase("fusiontpahere")) {
-        
+            sender.sendMessage("Fusion TPA is not ready yet!");
         }
         /* Accept TP Request */
         else if (cmd.getName().equalsIgnoreCase("fusiontpaccept")) {
-        
+            sender.sendMessage("Fusion TPA is not ready yet!");
         }
         /* Deny TP Request */
         else if (cmd.getName().equalsIgnoreCase("fusiontpdeny")) {
-        
+            sender.sendMessage("Fusion TPA is not ready yet!");
         }
         return false;
     }
+    
+    /* COMMANDS ******************************************************************************************** COMMANDS */
+    
+    /**
+     * Teleport one player to another player.
+     * Works for both online and offline players.
+     * @param sender          Command sender, where command errors and messages will be sent
+     * @param originName      Name of the player to be teleported
+     * @param destinationName Name of the player who represents the teleport destination
+     * @return True if the player was successfully teleported, false otherwise.
+     * Todo: Make sure the return statement does its job
+     */
+    private boolean fusionTeleport(CommandSender sender, String originName, String destinationName)
+    {
+        // Verify the origin player
+        OfflinePlayer originPlayer = findPlayer(originName);
+        if (originPlayer == null) {
+            sender.sendMessage("[FSN-TP] Player '" + originName + "' was not found!");
+            return(true);
+        }
+        
+        // Verify the destination player
+        OfflinePlayer destinationPlayer = findPlayer(destinationName);
+        if (destinationPlayer == null) {
+            sender.sendMessage("[FSN-TP] Player '" + destinationName + "' was not found!");
+            return(true);
+        }
+        
+        if (originPlayer.isOnline()) { // Online TP
+            Player onOriginPlayer = originPlayer.getPlayer();
+            if (destinationPlayer.isOnline()) { // Online player to online player
+                if (onlineTeleport(onOriginPlayer, destinationPlayer.getPlayer().getLocation())) {
+                    sender.sendMessage("[FSN-TP] Teleported player '" + onOriginPlayer.getName() + "' to '" +
+                        destinationPlayer.getName() + "'.");
+                } else {
+                    sender.sendMessage("[FSN-TP] Teleport failed!");
+                }
+                return(true);
+            } else { // Online player to offline player
+                PlayerHandler offlinePlayer = new PlayerHandler(PlayerHandler.findPlayerFile(destinationPlayer.getUniqueId()));
+                Location destination = offlinePlayer.getPlayerLocation();
+                
+                if (onOriginPlayer.teleport(destination)) {
+                    sender.sendMessage("[FSN-TP] Teleported player '" + onOriginPlayer.getName() + "' to last " +
+                            "known location for '" + destinationPlayer.getName() + "'.");
+                } else {
+                    sender.sendMessage("[FSN-TP] Teleport failed!");
+                }
+                return(true);
+            }
+        } else { // Offline TP
+            if (destinationPlayer.isOnline()) { // Offline player to online player
+                Location destination = destinationPlayer.getPlayer().getLocation();
+                if (offlineTeleport(originPlayer, destination)) {
+                    sender.sendMessage("[FSN-TP] Offline-teleported player '" + originPlayer.getName() + "' to '" +
+                    destinationPlayer.getName() + "'.");
+                } else {
+                    sender.sendMessage("[FSN-TP] Teleport failed!");
+                }
+                return true;
+            } else { // Offline player to offline player
+                PlayerHandler destPlayerData = new PlayerHandler(PlayerHandler.findPlayerFile(destinationPlayer.getUniqueId()));
+                Location destination = destPlayerData.getPlayerLocation();
+                if (offlineTeleport(originPlayer, destination)) {
+                    sender.sendMessage("[FSN-TP] Offline-teleported player '" + originPlayer.getName() + "' to '" +
+                            destinationPlayer.getName() + "'.");
+                } else {
+                    sender.sendMessage("[FSN-TP] Teleport failed!");
+                }
+                return true;
+            }
+        }
+    }
+    
+    /**
+     * Teleport a player to the spawn point in the main World
+     * @param sender     Command sender, where command errors and messages will be sent
+     * @param playerName Name of the player to be teleported
+     * @return True if the player was successfully teleported, false otherwise.
+     * Todo: Make sure the return statement does its job
+     */
+    private boolean spawnTeleport(CommandSender sender, String playerName)
+    {
+        OfflinePlayer player = findPlayer(playerName);
+        if (player == null) {
+            sender.sendMessage("[FSN-TP] Player '" + player.getName() + "' was not found!");
+            return true;
+        }
+        
+        Location spawnPoint = Bukkit.getServer().getWorld("world").getSpawnLocation();
+        
+        boolean success;
+        if (player.isOnline()) {
+            success = player.getPlayer().teleport(spawnPoint);
+        } else {
+            PlayerHandler playerData = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()));
+            success = playerData.setPlayerLocation(spawnPoint);
+        }
+        if (success)
+            sender.sendMessage("[FSN-TP] '" + playerName + "' was successfully teleported to spawn.");
+        return true;
+    }
+    
+    /* METHODS ********************************************************************************************** METHODS */
     
     /**
      * Find a player by their username.
@@ -179,7 +202,6 @@ public final class FusionTP extends JavaPlugin
                 return offPlayer;
         return null;
     }
-    
     /**
      * Find a player by their UUID.
      * @param uid - UUID to search by
@@ -203,5 +225,17 @@ public final class FusionTP extends JavaPlugin
     private boolean onlineTeleport(Player sender, Location destination)
     {
         return(sender.teleport(destination));
+    }
+    
+    /**
+     * Set a new location for an offline player.
+     * @param player Player to be teleported
+     * @param destination New location for the player
+     * @return True if the teleport is successful, false otherwise
+     */
+    private boolean offlineTeleport(OfflinePlayer player, Location destination)
+    {
+        PlayerHandler offlinePlayer = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()));
+        return(offlinePlayer.setPlayerLocation(destination));
     }
 }
