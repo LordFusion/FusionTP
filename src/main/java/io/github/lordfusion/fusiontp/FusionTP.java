@@ -3,12 +3,15 @@ package io.github.lordfusion.fusiontp;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -64,21 +67,15 @@ public final class FusionTP extends JavaPlugin
                 return(spawnTeleport(sender, args[0]));
             return false;
         }
-        /* Request TP */
-        else if (cmd.getName().equalsIgnoreCase("fusiontpa")) {
-            sender.sendMessage("Fusion TPA is not ready yet!");
+        /* Random TP */
+        else if (cmd.getName().equalsIgnoreCase("fusionrandomtp")) {
+            if (args.length > 0)
+                return false;
+            return(randomTeleport(sender));
         }
-        /* Request TP Here */
-        else if (cmd.getName().equalsIgnoreCase("fusiontpahere")) {
-            sender.sendMessage("Fusion TPA is not ready yet!");
-        }
-        /* Accept TP Request */
-        else if (cmd.getName().equalsIgnoreCase("fusiontpaccept")) {
-            sender.sendMessage("Fusion TPA is not ready yet!");
-        }
-        /* Deny TP Request */
-        else if (cmd.getName().equalsIgnoreCase("fusiontpdeny")) {
-            sender.sendMessage("Fusion TPA is not ready yet!");
+        /* Fusion Test */
+        else if (cmd.getName().equalsIgnoreCase("fusiontest")) {
+            fusionTest(sender);
         }
         return false;
     }
@@ -171,18 +168,42 @@ public final class FusionTP extends JavaPlugin
             return true;
         }
         
-        Location spawnPoint = Bukkit.getServer().getWorld("world").getSpawnLocation();
-        
         boolean success;
         if (player.isOnline()) {
-            success = player.getPlayer().teleport(spawnPoint);
+            success = player.getPlayer().teleport(WorldHandler.getServerSpawn());
         } else {
             PlayerHandler playerData = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()));
-            success = playerData.setPlayerLocation(spawnPoint);
+            success = playerData.setPlayerLocation(WorldHandler.getServerSpawn());
         }
         if (success)
             sender.sendMessage("[FSN-TP] '" + playerName + "' was successfully teleported to spawn.");
         return true;
+    }
+    
+    private boolean randomTeleport(CommandSender sender)
+    {
+        // Verify the command sender is a valid online player
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("Only online players can run this command!");
+            return false;
+        }
+        Player player = ((Player) sender).getPlayer();
+        WorldHandler playerWorld = new WorldHandler(player.getWorld());
+        Location randomLocation = playerWorld.getRandomTpDestination();
+        
+        return(onlineTeleport(player, randomLocation));
+    }
+    
+    /**
+     * I use this method to test things. You should never expect any form of real documentation around these parts.
+     * @param sender Command sender
+     */
+    private void fusionTest(CommandSender sender)
+    {
+        World world = WorldHandler.findWorld(0);
+        UUID worldId = world.getUID();
+        sender.sendMessage(String.valueOf(worldId.getLeastSignificantBits()));
+        sender.sendMessage(String.valueOf(worldId.getMostSignificantBits()));
     }
     
     /* METHODS ********************************************************************************************** METHODS */

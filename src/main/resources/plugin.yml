@@ -1,31 +1,37 @@
 name: "FusionTP"
 author: "Lord_Fusion"
-version: "1.100"
+version: "1.121"
 
 main: "io.github.lordfusion.fusiontp.FusionTP"
-softdepend: [Multiverse-Core]
+softdepend: [Multiverse-Core, WorldBorder]
 
 commands:
   fusiontp:
     description: "Teleport one player to another player."
     usage: /<command> [player] [player]
-    permission: FusionTP.direct.to
+    permission: fusion.tp.direct.to
     permission-message: "[Fusion] You don't have <permission>"
     aliases: [ftp]
   fusiontphere:
     description: "Teleport a player to you."
     usage: /<command> [player]
-    permission: FusionTP.direct.here
+    permission: fusion.tp.direct.here
     permission-message: "[Fusion] You don't have <permission>"
     aliases: [ftphere, ftph]
   fusionspawntp:
     description: "Teleport a player to Spawn."
     usage: /<command> [player]
-    permission: FusionTP.direct.spawn
+    permission: fusion.tp.direct.spawn
     permission-message: "[Fusion] You don't have <permission>"
     aliases: [fstp, fspawntp, spawntp, stp]
+  fusionrandomtp:
+    description: "Teleport to a random place in the world."
+    usage: /<command>
+    permission: fusion.tp.random
+    permission-message: "[Fusion] You don't have <permission>"
+    aliases: [frtp, rtp, randomtp]
 
   fusiontest:
     description: "DEVELOPERS ONLY: Test a method from the code."
-    permission: FusionTP.developer.test
+    permission: fusion.developer
     permission-message: "[Fusion] You don't have <permission>"

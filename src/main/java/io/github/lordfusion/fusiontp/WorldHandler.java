@@ -1,17 +1,20 @@
 package io.github.lordfusion.fusiontp;
 
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
-import com.comphenix.protocol.wrappers.nbt.NbtList;
+import com.wimbli.WorldBorder.BorderData;
+import com.wimbli.WorldBorder.WorldBorder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginManager;
 
+import javax.swing.border.Border;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
+
 
 /**
  * Deals with world interactions, with or without Multiverse-Core.
@@ -38,6 +41,17 @@ public class WorldHandler
         this.fileLocation = levelDatFile;
     }
     
+    public WorldHandler(World bukkitWorld)
+    {
+        File levelDatFile = findWorldFile(bukkitWorld);
+        try {
+            this.fileContents = NbtManager.loadFile(levelDatFile);
+        } catch (IOException exc) {
+            Bukkit.getServer().getLogger().warning("[Fusion TP] ERROR: FAILED TO READ PLAYER DAT FILE.");
+        }
+        this.fileLocation = levelDatFile;
+    }
+    
     /* NON-STATIC METHODS ************************************************************************ NON-STATIC METHODS */
     /**
      * Reads the DAT information to find the dimension number.
@@ -47,7 +61,7 @@ public class WorldHandler
     {
         NbtCompound worldData = fileContents.getCompound("Data");
         int dimNumber = worldData.getInteger("dimension");
-        Bukkit.getServer().getLogger().info("Dimension number: " + dimNumber);
+        //Bukkit.getServer().getLogger().info("Dimension number: " + dimNumber);
         return(dimNumber);
     }
     
@@ -61,15 +75,96 @@ public class WorldHandler
         return(worldData.getString("LevelName"));
     }
     
+    /**
+     * Get the current world border from the WorldBorder plugin.
+     * @return World border data
+     */
+    private BorderData getWorldBorder()
+    {
+        if (!isWorldBorderEnabled())
+            return null;
+        Plugin wbPlugin = Bukkit.getServer().getPluginManager().getPlugin("WorldBorder");
+        WorldBorder worldBorder = (WorldBorder)wbPlugin;
+        BorderData borderData = worldBorder.getWorldBorder(this.getWorldName());
+        return(borderData);
+    }
+    
+    /**
+     * Find a random location for a player to teleport to within the given world.
+     * Obeys world borders, if they exist from the WorldBorder plugin.
+     * Spawns players on the top block at the location. If that block is water or lava, another location is selected.
+     * @return Safe randomTP location.
+     */
+    Location getRandomTpDestination()
+    {
+        World world = findWorld(this.getWorldName());
+        BorderData worldBorder = this.getWorldBorder();
+        
+        int maxX, maxZ, minX, minZ;
+        int randX = 0, randZ = 0, topY = 256;
+        while (randX == 0 && randZ == 0) {
+            if (worldBorder != null) {
+                int centerX = (int) worldBorder.getX();
+                int centerZ = (int) worldBorder.getZ();
+                int radiusX = worldBorder.getRadiusX();
+                int radiusZ = worldBorder.getRadiusZ();
+                maxX = centerX + radiusX;
+                maxZ = centerZ + radiusZ;
+                minX = centerX - radiusX;
+                minZ = centerZ - radiusZ;
+    
+                while (randX == 0 && randZ == 0) {
+                    randX = ThreadLocalRandom.current().nextInt(minX, maxX);
+                    randZ = ThreadLocalRandom.current().nextInt(minZ, maxZ);
+                    if (!worldBorder.insideBorder(randX, randZ)) {
+                        randX = 0;
+                        randZ = 0;
+//                        Bukkit.getServer().getLogger().info("[FSN-TP] Generated RTP location outside border. " +
+//                                "Generating new location...");
+                    }
+        
+                }
+            } else {
+                maxX = 20000;
+                maxZ = 20000;
+                minX = -20000;
+                minZ = -20000;
+        
+                randX = ThreadLocalRandom.current().nextInt(minX, maxX);
+                randZ = ThreadLocalRandom.current().nextInt(minZ, maxZ);
+            }
+            
+            Block airBlock = world.getHighestBlockAt(randX, randZ);
+            topY = airBlock.getY();
+            Block topBlock = world.getBlockAt(randX, topY-1, randZ);
+//            Bukkit.getServer().getLogger().info("[FSN-TP] Top block: " + topBlock.getType());
+            
+            if (topBlock.isLiquid()) {
+                randX = 0;
+                randZ = 0;
+//                Bukkit.getServer().getLogger().info("[FSN-TP] Generated RTP location on water or lava. " +
+//                        "Generating new location...");
+            }
+        }
+    
+        return(new Location(world, randX, topY, randZ));
+    }
+    
     /* STATIC METHODS ******************************************************************************** STATIC METHODS */
     /**
      * Returns the main overworld's player spawn point.
      * @return Location of the main overworld's player spawn point
      */
-    public static Location getServerSpawn()
+    static Location getServerSpawn()
     {
         World mainWorld = Bukkit.getServer().getWorld("world");
         return(mainWorld.getSpawnLocation());
+    }
+    
+    static File findWorldFile(World world)
+    {
+        File worldFolder = world.getWorldFolder();
+        return(new File(worldFolder, "level.dat"));
     }
     
     /**
@@ -135,5 +230,14 @@ public class WorldHandler
             }
         }
         return(null);
+    }
+    
+    /**
+     * Checks the server for the plugin "WorldBorder"
+     * @return True if enabled, false otherwise
+     */
+    private static boolean isWorldBorderEnabled()
+    {
+        return(Bukkit.getServer().getPluginManager().isPluginEnabled("WorldBorder"));
     }
 }

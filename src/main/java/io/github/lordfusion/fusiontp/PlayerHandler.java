@@ -62,14 +62,17 @@ public class PlayerHandler
         File worldFolder = loc.getWorld().getWorldFolder();
         WorldHandler world = new WorldHandler(new File (worldFolder,"level.dat"));
         int worldId = world.getDimNumber();
+        fileContents.put("Dimension", worldId);
         
         double x= loc.getX();
         double y= loc.getY();
         double z= loc.getZ();
         NbtList<Double> newLoc = NbtFactory.ofList("Pos",x,y,z);
-        
-        fileContents.put("Dimension", worldId);
         fileContents.put(newLoc);
+    
+        fileContents.put("WorldUUIDLeast", loc.getWorld().getUID().getLeastSignificantBits());
+        fileContents.put("WorldUUIDMost", loc.getWorld().getUID().getMostSignificantBits());
+        
         return(NbtManager.saveFile(fileContents, fileLocation));
     }
 
