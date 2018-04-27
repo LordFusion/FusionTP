@@ -15,4 +15,4 @@ In no particular order:\
 **-Teleport requests**\
 **-Economy support**\
 **-Sethomes**\
-**Nickname Support**
+**-Nickname Support**
