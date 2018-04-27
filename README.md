@@ -14,4 +14,5 @@ In no particular order:\
 -View player's last location \
 **-Teleport requests**\
 **-Economy support**\
-**-Sethomes**
+**-Sethomes**\
+**Nickname Support**
