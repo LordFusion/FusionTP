@@ -1,18 +1,18 @@
 package io.github.lordfusion.fusiontp;
 
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.LazyMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.List;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 /**
  * FusionTP is a teleportation plugin built for Minecraft 1.7.10 Bukkit servers.
@@ -20,6 +20,11 @@ import java.util.UUID;
  */
 public final class FusionTP extends JavaPlugin
 {
+    static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
+    static final String consolePrefix = "[Fusion Teleport] ";
+    
+    static final Integer rtpDelay = 30;
+    
     public void onEnable()
     {
         getLogger().info("What's up boys and girls, it's ya boi, FusionTP.");
@@ -185,13 +190,45 @@ public final class FusionTP extends JavaPlugin
         // Verify the command sender is a valid online player
         if (!(sender instanceof Player)) {
             sender.sendMessage("Only online players can run this command!");
-            return false;
+            return true;
         }
         Player player = ((Player) sender).getPlayer();
+        
+        // Check if the command is off of cooldown
+        if (player.hasMetadata("FSN.RTP.LAST")) {
+            MetadataValue mdValue = player.getMetadata("FSN.RTP.LAST").get(0);
+            Instant lastCalled = Instant.parse(mdValue.asString());
+            Instant nextCallAvailable = lastCalled.plus(rtpDelay, ChronoUnit.SECONDS);
+            if (nextCallAvailable.isAfter(Instant.now())) {
+                sender.sendMessage(chatPrefix + ChatColor.RED + "You must wait " + Instant.now()
+                        .until(nextCallAvailable, ChronoUnit.SECONDS) + " seconds before using RTP again!");
+                sendConsoleInfo("Player attempted to use RTP, but they are on cooldown: "
+                        + ((Player) sender).getName());
+                return true;
+            }
+        }
+        
+        // Find a random location for the world the player is in
         WorldHandler playerWorld = new WorldHandler(player.getWorld());
         Location randomLocation = playerWorld.getRandomTpDestination();
         
-        return(onlineTeleport(player, randomLocation));
+        // Teleport the player
+        if (onlineTeleport(player, randomLocation)) {
+            player.setMetadata("FSN.RTP.LAST", new LazyMetadataValue(this, new Callable<Object>()
+            {
+                final Instant time = Instant.now();
+                public Instant call() throws Exception
+                {
+                    return(time);
+                }
+            }));
+            sender.sendMessage( chatPrefix + ChatColor.LIGHT_PURPLE + "You have been teleported to a random location!");
+            sendConsoleInfo("Player was random-teleported: " + ((Player) sender).getName());
+        } else {
+            sender.sendMessage(chatPrefix + ChatColor.RED + "There was an error teleporting you. Try again later.");
+            sendConsoleWarn("Random-teleport FAILED for: " + ((Player) sender).getName());
+        }
+        return true;
     }
     
     /**
@@ -258,5 +295,25 @@ public final class FusionTP extends JavaPlugin
     {
         PlayerHandler offlinePlayer = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()));
         return(offlinePlayer.setPlayerLocation(destination));
+    }
+    
+    /* STATIC METHODS ******************************************************************************** STATIC METHODS */
+    
+    /**
+     * Sends a message to the server console, with the Info priority level.
+     * @param message Message for console
+     */
+    void sendConsoleInfo(String message)
+    {
+        getLogger().info(message);
+    }
+    
+    /**
+     * Sends a message to the server console, with the Warning priority level.
+     * @param message Message for console
+     */
+    void sendConsoleWarn(String message)
+    {
+        getLogger().warning(message);
     }
 }
