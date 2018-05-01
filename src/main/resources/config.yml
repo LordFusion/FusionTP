@@ -1,0 +1,13 @@
+#
+# Fusion Teleport
+#   A decent teleportation plugin for servers that want to be able to teleport offline players.
+#
+
+# Amount of time players have to wait before running /rtp again
+# Value must be an INTEGER representing SECONDS
+rtpDelay: 30
+
+
+# Don't touch!
+# Seriously! I'm not a good enough programmer to know what will happen if you do!
+version: 2

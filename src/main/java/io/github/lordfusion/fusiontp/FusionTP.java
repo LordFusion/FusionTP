@@ -9,6 +9,7 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -20,15 +21,28 @@ import java.util.concurrent.Callable;
  */
 public final class FusionTP extends JavaPlugin
 {
+    static final int supportedConfigVersion = 2;
+    
     static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
     static final String consolePrefix = "[Fusion Teleport] ";
     
-    static final Integer rtpDelay = 30;
-    
     public void onEnable()
     {
-        getLogger().info("What's up boys and girls, it's ya boi, FusionTP.");
+        sendConsoleInfo("What's up boys and girls, it's ya boi, FusionTP.");
         getServer().getPluginManager().registerEvents(new ListenerHandler(), this);
+        
+        if (!(new File(this.getDataFolder(), "config.yml")).exists()) {
+            sendConsoleInfo("No config found. Generating...");
+            this.saveDefaultConfig();
+        } else if (this.getConfig().getInt("version") != supportedConfigVersion) {
+                sendConsoleInfo("Invalid or missing config. Loading from defaults.");
+                this.getConfig().options().copyDefaults(true);
+                this.saveConfig();
+        } else {
+            sendConsoleInfo("Config file verified.");
+        }
+        
+        
     }
     
     /**
@@ -169,7 +183,7 @@ public final class FusionTP extends JavaPlugin
     {
         OfflinePlayer player = findPlayer(playerName);
         if (player == null) {
-            sender.sendMessage("[FSN-TP] Player '" + player.getName() + "' was not found!");
+            sender.sendMessage("[FSN-TP] Player '" + playerName + "' was not found!");
             return true;
         }
         
@@ -181,10 +195,15 @@ public final class FusionTP extends JavaPlugin
             success = playerData.setPlayerLocation(WorldHandler.getServerSpawn());
         }
         if (success)
-            sender.sendMessage("[FSN-TP] '" + playerName + "' was successfully teleported to spawn.");
+            sender.sendMessage("[FSN-TP] '" + player.getName() + "' was successfully teleported to spawn.");
         return true;
     }
     
+    /**
+     * todo: documentation
+     * @param sender
+     * @return
+     */
     private boolean randomTeleport(CommandSender sender)
     {
         // Verify the command sender is a valid online player
@@ -195,9 +214,10 @@ public final class FusionTP extends JavaPlugin
         Player player = ((Player) sender).getPlayer();
         
         // Check if the command is off of cooldown
-        if (player.hasMetadata("FSN.RTP.LAST")) {
+        if (player.hasMetadata("FSN.RTP.LAST") && !player.getMetadata("FSN.RTP.LAST").isEmpty()) {
             MetadataValue mdValue = player.getMetadata("FSN.RTP.LAST").get(0);
             Instant lastCalled = Instant.parse(mdValue.asString());
+            int rtpDelay = this.getConfig().getInt("rtpDelay");
             Instant nextCallAvailable = lastCalled.plus(rtpDelay, ChronoUnit.SECONDS);
             if (nextCallAvailable.isAfter(Instant.now())) {
                 sender.sendMessage(chatPrefix + ChatColor.RED + "You must wait " + Instant.now()
@@ -238,6 +258,10 @@ public final class FusionTP extends JavaPlugin
     private void fusionTest(CommandSender sender)
     {
         World world = WorldHandler.findWorld(0);
+        if (world == null) {
+            sender.sendMessage("Failed!");
+            return;
+        }
         UUID worldId = world.getUID();
         sender.sendMessage(String.valueOf(worldId.getLeastSignificantBits()));
         sender.sendMessage(String.valueOf(worldId.getMostSignificantBits()));

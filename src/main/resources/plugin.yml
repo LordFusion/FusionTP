@@ -1,6 +1,6 @@
 name: "FusionTP"
 author: "Lord_Fusion"
-version: "1.123"
+version: "1.134"
 
 main: "io.github.lordfusion.fusiontp.FusionTP"
 softdepend: [Multiverse-Core, WorldBorder]
@@ -35,3 +35,29 @@ commands:
     description: "DEVELOPERS ONLY: Test a method from the code."
     permission: fusion.developer
     permission-message: "[Fusion] You don't have <permission>"
+
+permissions:
+  fusion.*:
+    description: Access to all commands across all Fusion plugins.
+    children:
+      fusion.developer: true
+      fusion.tp.nodelay: true
+      fusion.tp.*: true
+    default: false
+
+  fusion.tp.nodelay:
+    description: Allows players to bypass the teleport cooldown
+
+  fusion.tp.*:
+    description: Access to all teleporting commands
+    children:
+      fusion.tp.direct.to: true
+      fusion.tp.direct.here: true
+      fusion.tp.direct.spawn: true
+      fusion.general: true
+
+  fusion.general:
+    description: Access to commands intended for the average player.
+    children:
+      fusion.tp.random: true
+      fusion.about: true
