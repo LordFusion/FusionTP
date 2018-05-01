@@ -200,9 +200,9 @@ public final class FusionTP extends JavaPlugin
     }
     
     /**
-     * todo: documentation
-     * @param sender
-     * @return
+     * Teleport a player to a random location, in the same world they're currently in.
+     * @param sender    Command sender, and player that will be teleported
+     * @return          True
      */
     private boolean randomTeleport(CommandSender sender)
     {
