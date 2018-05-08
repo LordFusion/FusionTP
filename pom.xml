@@ -6,7 +6,7 @@
 
     <groupId>io.github.lordfusion</groupId>
     <artifactId>FusionTP</artifactId>
-    <version>1.0</version>
+    <version>1</version>
 
     <build>
         <plugins>

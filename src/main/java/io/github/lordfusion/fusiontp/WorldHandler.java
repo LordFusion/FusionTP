@@ -3,10 +3,7 @@ package io.github.lordfusion.fusiontp;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.wimbli.WorldBorder.BorderData;
 import com.wimbli.WorldBorder.WorldBorder;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.WorldCreator;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 
@@ -26,6 +23,7 @@ public class WorldHandler
 {
     private NbtCompound fileContents;
     private File fileLocation;
+    private World world;
     
     /**
      * Creates a specialized NbtManager to handle level.dat files
@@ -50,6 +48,7 @@ public class WorldHandler
             Bukkit.getServer().getLogger().warning("[Fusion TP] ERROR: FAILED TO READ PLAYER DAT FILE.");
         }
         this.fileLocation = levelDatFile;
+        this.world = bukkitWorld;
     }
     
     /* NON-STATIC METHODS ************************************************************************ NON-STATIC METHODS */
@@ -97,12 +96,12 @@ public class WorldHandler
      */
     Location getRandomTpDestination()
     {
-        World world = findWorld(this.getWorldName());
         BorderData worldBorder = this.getWorldBorder();
         
         int maxX, maxZ, minX, minZ;
-        int randX = 0, randZ = 0, topY = 256;
-        while (randX == 0 && randZ == 0) {
+        int randX = 0, randZ = 0, topY = 256, tries = 0;
+        while (randX == 0 && randZ == 0 && tries < 10) {
+            // Generate random x- and z-coordinates.
             if (worldBorder != null) {
                 int centerX = (int) worldBorder.getX();
                 int centerZ = (int) worldBorder.getZ();
@@ -119,8 +118,6 @@ public class WorldHandler
                     if (!worldBorder.insideBorder(randX, randZ)) {
                         randX = 0;
                         randZ = 0;
-//                        Bukkit.getServer().getLogger().info("[FSN-TP] Generated RTP location outside border. " +
-//                                "Generating new location...");
                     }
         
                 }
@@ -129,25 +126,78 @@ public class WorldHandler
                 maxZ = 20000;
                 minX = -20000;
                 minZ = -20000;
+                // Todo: Config options
         
                 randX = ThreadLocalRandom.current().nextInt(minX, maxX);
                 randZ = ThreadLocalRandom.current().nextInt(minZ, maxZ);
             }
             
-            Block airBlock = world.getHighestBlockAt(randX, randZ);
-            topY = airBlock.getY();
-            Block topBlock = world.getBlockAt(randX, topY-1, randZ);
-//            Bukkit.getServer().getLogger().info("[FSN-TP] Top block: " + topBlock.getType());
+            // Find a safe y-coordinate, if possible.
+            Block topBlock = null;
+            if (world.getEnvironment().equals(World.Environment.NETHER)) { // Nether world
+                for (int i=1; i<= 124; i++) { // Check every block for a suitable landing location
+                    Location landingLocation = new Location(this.world, randX, i, randZ);
+                    if (checkSafeLocation(landingLocation)) {
+                        topBlock = world.getBlockAt(randX, i, randZ);
+                        break;
+                    }
+                }
+            } else if (world.getEnvironment().equals(World.Environment.THE_END)) { // End world
+                return null;
+            } else { // Normal world
+                Block highestBlock = world.getHighestBlockAt(randX, randZ);
+                Location landingLocation = new Location(this.world, randX, highestBlock.getY()-1, randZ);
+                if (checkSafeLocation(landingLocation))
+                    topBlock = world.getBlockAt(randX, highestBlock.getY()-1, randZ);
+            }
             
-            if (topBlock.isLiquid()) {
+            // If a safe location wasn't found at the given x- and z- coordinates, try again.
+            if (topBlock == null) {
                 randX = 0;
                 randZ = 0;
-//                Bukkit.getServer().getLogger().info("[FSN-TP] Generated RTP location on water or lava. " +
-//                        "Generating new location...");
+            } else {
+                topY = topBlock.getY();
             }
+            tries++;
         }
+        
+        if (randX == 0 && randZ == 0)
+            return null;
+        return new Location(world, randX, topY+1, randZ);
+    }
     
-        return(new Location(world, randX, topY, randZ));
+    /**
+     * Make sure the location is safe for a player to spawn.
+     * Safe locations must not be a fluid, and must have 2 empty blocks for the player.
+     * @param location Location to check.
+     * @return True if the location is safe, false otherwise.
+     */
+    private boolean checkSafeLocation(Location location)
+    {
+        FusionTP.sendConsoleInfo("Checking location for safety: (" + location.getX() + ", " + location.getY() + ", " +
+                location.getZ() + ") in world " + location.getWorld().getName());
+        
+        // Todo: Add a config option to block problematic blocks (such as BiomesOP Ash)
+        Block bot = world.getBlockAt(location);
+        if (bot.isLiquid() || bot.isEmpty()) {
+            FusionTP.sendConsoleInfo("     Bottom block is NOT SAFE: " + bot.getType());
+            return false;
+        }
+        Block mid = world.getBlockAt(location.add(0,1,0));
+        if (mid.getType().isSolid() || mid.isLiquid() || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY_ASH")) {
+            FusionTP.sendConsoleInfo("     Middle block is NOT SAFE: " + mid.getType());
+            return false;
+        }
+        Block top = world.getBlockAt(location.add(0,1,0));
+        if (top.getType().isSolid() || top.isLiquid() || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY_ASH")) {
+            FusionTP.sendConsoleInfo("     Top block is NOT SAFE: " + top.getType());
+            return false;
+        }
+        FusionTP.sendConsoleInfo("     Location is safe: " + bot + ", " + mid + ", " + top);
+        
+        // Todo: Check block above top block for sand, gravel, etc.
+        
+        return true;
     }
     
     /* STATIC METHODS ******************************************************************************** STATIC METHODS */

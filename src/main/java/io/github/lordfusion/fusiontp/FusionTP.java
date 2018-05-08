@@ -18,6 +18,10 @@ import java.util.concurrent.Callable;
 /**
  * FusionTP is a teleportation plugin built for Minecraft 1.7.10 Bukkit servers.
  * Written by Lord_Fusion
+ *
+ * Special thanks to:
+ *    Goreacraft: Without your plugins irritating me, I never would've been interested in writing my own.
+*     shadoking75: For being the only person that would talk Java with me, and giving pointers.
  */
 public final class FusionTP extends JavaPlugin
 {
@@ -41,8 +45,6 @@ public final class FusionTP extends JavaPlugin
         } else {
             sendConsoleInfo("Config file verified.");
         }
-        
-        
     }
     
     /**
@@ -214,7 +216,8 @@ public final class FusionTP extends JavaPlugin
         Player player = ((Player) sender).getPlayer();
         
         // Check if the command is off of cooldown
-        if (player.hasMetadata("FSN.RTP.LAST") && !player.getMetadata("FSN.RTP.LAST").isEmpty()) {
+        if (player.hasMetadata("FSN.RTP.LAST") && !player.getMetadata("FSN.RTP.LAST").isEmpty() && !player.isOp()
+                && !player.hasPermission("fusion.tp.nodelay")) {
             MetadataValue mdValue = player.getMetadata("FSN.RTP.LAST").get(0);
             Instant lastCalled = Instant.parse(mdValue.asString());
             int rtpDelay = this.getConfig().getInt("rtpDelay");
@@ -228,26 +231,8 @@ public final class FusionTP extends JavaPlugin
             }
         }
         
-        // Find a random location for the world the player is in
-        WorldHandler playerWorld = new WorldHandler(player.getWorld());
-        Location randomLocation = playerWorld.getRandomTpDestination();
-        
-        // Teleport the player
-        if (onlineTeleport(player, randomLocation)) {
-            player.setMetadata("FSN.RTP.LAST", new LazyMetadataValue(this, new Callable<Object>()
-            {
-                final Instant time = Instant.now();
-                public Instant call() throws Exception
-                {
-                    return(time);
-                }
-            }));
-            sender.sendMessage( chatPrefix + ChatColor.LIGHT_PURPLE + "You have been teleported to a random location!");
-            sendConsoleInfo("Player was random-teleported: " + ((Player) sender).getName());
-        } else {
-            sender.sendMessage(chatPrefix + ChatColor.RED + "There was an error teleporting you. Try again later.");
-            sendConsoleWarn("Random-teleport FAILED for: " + ((Player) sender).getName());
-        }
+        player.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "Finding a safe location to land...");
+        Bukkit.getScheduler().runTaskAsynchronously(this, new RtpHandler(this, player));
         return true;
     }
     
@@ -304,8 +289,23 @@ public final class FusionTP extends JavaPlugin
      * @param destination New location for the player
      * @return True if the teleport is successful, false otherwise
      */
-    private boolean onlineTeleport(Player sender, Location destination)
+    boolean onlineTeleport(Player sender, Location destination)
     {
+        Bukkit.getScheduler().runTask(this, () -> {
+            World destWorld = Bukkit.getWorld(destination.getWorld().getUID());
+            Chunk destChunk = destWorld.getChunkAt(destination);
+            int repeat = 0;
+            while (!destChunk.isLoaded() &&  (repeat < 10)) {
+                destChunk.load();
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    FusionTP.sendConsoleWarn("Unable to sleep!");
+                }
+                repeat++;
+            }
+            sender.teleport(destination.add(0.5, 0, 0.5));
+        });
         return(sender.teleport(destination));
     }
     
@@ -327,17 +327,17 @@ public final class FusionTP extends JavaPlugin
      * Sends a message to the server console, with the Info priority level.
      * @param message Message for console
      */
-    void sendConsoleInfo(String message)
+    static void sendConsoleInfo(String message)
     {
-        getLogger().info(message);
+        Bukkit.getServer().getLogger().info(consolePrefix + message);
     }
     
     /**
      * Sends a message to the server console, with the Warning priority level.
      * @param message Message for console
      */
-    void sendConsoleWarn(String message)
+    static void sendConsoleWarn(String message)
     {
-        getLogger().warning(message);
+        Bukkit.getServer().getLogger().warning(consolePrefix + message);
     }
 }
