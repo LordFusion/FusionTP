@@ -1,6 +1,6 @@
 name: "FusionTP"
 author: "Lord_Fusion"
-version: "1.157"
+version: "1.160"
 
 main: "io.github.lordfusion.fusiontp.FusionTP"
 softdepend: [Multiverse-Core, WorldBorder]

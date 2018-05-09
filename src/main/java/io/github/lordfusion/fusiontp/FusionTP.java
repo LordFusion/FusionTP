@@ -291,7 +291,17 @@ public final class FusionTP extends JavaPlugin
      */
     boolean onlineTeleport(Player sender, Location destination)
     {
-        Bukkit.getScheduler().runTask(this, () -> {
+        double tpWarmup;
+        if (sender.isOp() || sender.hasPermission("fusion.tp.nodelay")) {
+            tpWarmup = 0;
+        } else if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
+            tpWarmup = Bukkit.getPluginManager().getPlugin("Essentials").getConfig()
+                    .getDouble("teleport-cooldown");
+        } else {
+            tpWarmup = 0;
+        }
+        
+        Bukkit.getScheduler().runTaskLater(this, () -> {
             World destWorld = Bukkit.getWorld(destination.getWorld().getUID());
             Chunk destChunk = destWorld.getChunkAt(destination);
             int repeat = 0;
@@ -305,7 +315,7 @@ public final class FusionTP extends JavaPlugin
                 repeat++;
             }
             sender.teleport(destination.add(0.5, 0, 0.5));
-        });
+        }, (long)(tpWarmup*20));
         return(sender.teleport(destination));
     }
     
