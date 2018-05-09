@@ -217,7 +217,7 @@ public final class FusionTP extends JavaPlugin
         
         // Check if the command is off of cooldown
         if (player.hasMetadata("FSN.RTP.LAST") && !player.getMetadata("FSN.RTP.LAST").isEmpty() && !player.isOp()
-                && !player.hasPermission("fusion.tp.nodelay")) {
+                && !player.hasPermission("fusion.tp.nodelay.cooldown")) {
             MetadataValue mdValue = player.getMetadata("FSN.RTP.LAST").get(0);
             Instant lastCalled = Instant.parse(mdValue.asString());
             int rtpDelay = this.getConfig().getInt("rtpDelay");
@@ -292,13 +292,21 @@ public final class FusionTP extends JavaPlugin
     boolean onlineTeleport(Player sender, Location destination)
     {
         double tpWarmup;
-        if (sender.isOp() || sender.hasPermission("fusion.tp.nodelay")) {
+        if (sender.isOp() || sender.hasPermission("fusion.tp.nodelay.warmup")) {
             tpWarmup = 0;
+            sendConsoleInfo("User has permission to bypass the warmup!");
         } else if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
             tpWarmup = Bukkit.getPluginManager().getPlugin("Essentials").getConfig()
                     .getDouble("teleport-cooldown");
+            sendConsoleInfo("Warmup timer used from Essentials config: " + (long)(tpWarmup*20));
         } else {
             tpWarmup = 0;
+            sendConsoleInfo("No config, no warmup!");
+        }
+        
+        if (tpWarmup > 0) {
+            sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "Teleportation will commence in " +
+                    ChatColor.GOLD + (int)tpWarmup + "seconds. Don't move.");
         }
         
         Bukkit.getScheduler().runTaskLater(this, () -> {
@@ -316,7 +324,8 @@ public final class FusionTP extends JavaPlugin
             }
             sender.teleport(destination.add(0.5, 0, 0.5));
         }, (long)(tpWarmup*20));
-        return(sender.teleport(destination));
+        sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You were teleported!");
+        return true;
     }
     
     /**

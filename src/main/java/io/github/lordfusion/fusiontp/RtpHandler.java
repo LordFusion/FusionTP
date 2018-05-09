@@ -43,7 +43,7 @@ public class RtpHandler implements Runnable
                     return(time);
                 }
             }));
-            player.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You have been teleported to a random location!");
+//            player.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You have been teleported to a random location!");
             FusionTP.sendConsoleInfo("Player was random-teleported: " + player.getName() + " -> (" +
                     randomLocation.getX() + ", " + randomLocation.getY() + ", " + randomLocation.getZ() + ") in world "
                     + randomLocation.getWorld().getName());

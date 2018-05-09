@@ -1,6 +1,6 @@
 name: "FusionTP"
 author: "Lord_Fusion"
-version: "1.160"
+version: "1.163"
 
 main: "io.github.lordfusion.fusiontp.FusionTP"
 softdepend: [Multiverse-Core, WorldBorder]
@@ -47,6 +47,9 @@ permissions:
 
   fusion.tp.nodelay:
     description: Allows players to bypass the teleport cooldown
+    children:
+      fusion.tp.nodelay.cooldown: true
+      fusion.tp.nodelay.warmup: true
 
   fusion.tp.*:
     description: Access to all teleporting commands
