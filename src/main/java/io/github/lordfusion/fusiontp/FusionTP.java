@@ -26,7 +26,7 @@ import java.util.concurrent.Callable;
  */
 public final class FusionTP extends JavaPlugin
 {
-    static final int supportedConfigVersion = 2;
+    static final int supportedConfigVersion = 3;
     
     static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
     static final String consolePrefix = "[Fusion Teleport] ";
