@@ -35,11 +35,15 @@ public final class FusionTP extends JavaPlugin
         sendConsoleInfo("What's up boys and girls, it's ya boi, FusionTP.");
         getServer().getPluginManager().registerEvents(new ListenerHandler(), this);
         
-        if (!(new File(this.getDataFolder(), "config.yml")).exists()) {
+        File configFile = new File(this.getDataFolder(), "config.yml");
+        
+        if (!configFile.exists()) {
             sendConsoleInfo("No config found. Generating...");
             this.saveDefaultConfig();
         } else if (this.getConfig().getInt("version") != supportedConfigVersion) {
             sendConsoleInfo("Invalid or missing config. Loading from defaults.");
+            if (!configFile.renameTo(new File(configFile.getParentFile().getPath() + "/config-backup.yml")))
+                configFile.delete();
             this.saveDefaultConfig();
         } else {
             sendConsoleInfo("Config file verified.");
