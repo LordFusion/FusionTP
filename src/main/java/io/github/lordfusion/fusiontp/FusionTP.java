@@ -12,6 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -29,6 +30,9 @@ public final class FusionTP extends JavaPlugin
     
     static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
     static final String consolePrefix = "[Fusion Teleport] ";
+    
+    boolean worldWhitelistEnabled = false;
+    String[] listedWorlds;
     
     public void onEnable()
     {
@@ -48,6 +52,12 @@ public final class FusionTP extends JavaPlugin
         } else {
             sendConsoleInfo("Config file verified.");
         }
+        
+        // Read white- or black-listed worlds
+        this.worldWhitelistEnabled = this.getConfig().getBoolean("rtpWorldWhitelist");
+        this.listedWorlds = this.getConfig().getStringList("rtpWorlds").toArray(new String[0]);
+        if (this.listedWorlds.length == 0)
+            this.listedWorlds = null;
     }
     
     /**
@@ -217,6 +227,14 @@ public final class FusionTP extends JavaPlugin
             return true;
         }
         Player player = ((Player) sender).getPlayer();
+        
+        // Check if RandomTP is allowed in the player's world
+        if (Arrays.stream(this.listedWorlds).anyMatch(player.getWorld().getName()::equals) &&
+                !this.worldWhitelistEnabled) {
+            sender.sendMessage(chatPrefix + ChatColor.RED + "RTP is not allowed in this world!");
+            sendConsoleInfo("Player attempted to use RTP in world '" + player.getWorld().getName() + ": "
+                    + sender.getName());
+        }
         
         // Check if the command is off of cooldown
         if (player.hasMetadata("FSN.RTP.LAST") &&

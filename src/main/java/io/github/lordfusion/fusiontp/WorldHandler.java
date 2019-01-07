@@ -45,7 +45,7 @@ public class WorldHandler
         try {
             this.fileContents = NbtManager.loadFile(levelDatFile);
         } catch (IOException exc) {
-            Bukkit.getServer().getLogger().warning("[Fusion TP] ERROR: FAILED TO READ PLAYER DAT FILE.");
+            Bukkit.getServer().getLogger().warning("[Fusion TP] ERROR: FAILED TO READ WORLD DAT FILE.");
         }
         this.fileLocation = levelDatFile;
         this.world = bukkitWorld;
@@ -174,7 +174,7 @@ public class WorldHandler
      */
     private boolean checkSafeLocation(Location location)
     {
-        // Todo: Add a config option to block problematic blocks (such as BiomesOP Ash)
+        // Todo: Add a config option to block problematic modded blocks (such as BiomesOP Ash)
         Block bot = world.getBlockAt(location);
         if (bot.isLiquid() || bot.isEmpty()) {
             return false;

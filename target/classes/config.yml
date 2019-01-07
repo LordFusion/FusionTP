@@ -7,7 +7,12 @@
 # Value must be an INTEGER representing SECONDS
 rtpDelay: 30
 
+# Worlds that you would like to be whitelisted (true) or blacklisted (false)
+# World name should be the official name, not the friendly name (i.e "DIM1" not "The End")
+rtpWorldWhitelist: false
+rtpWorlds: {}
+
 
 # Don't touch!
 # Seriously! I'm not a good enough programmer to know what will happen if you do!
-version: 2
+version: 3
