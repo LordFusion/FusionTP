@@ -15,20 +15,5 @@ public final class ListenerHandler implements Listener
         Bukkit.getLogger().info("[FusionTP] Listener loaded.");
     }
     
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerTeleport(PlayerTeleportEvent event)
-    {
-        boolean mdValueRefined;
-        Player player = event.getPlayer();
-        if (player.getMetadata("FSN.NOTP").isEmpty()) {
-            return;
-        } else {
-            MetadataValue mdValueRaw = player.getMetadata("FSN.NOTP").get(0);
-            mdValueRefined = mdValueRaw.asBoolean();
-        }
-        
-        if (mdValueRefined) {
-            event.setCancelled(true);
-        }
-    }
+    
 }
