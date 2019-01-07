@@ -174,26 +174,19 @@ public class WorldHandler
      */
     private boolean checkSafeLocation(Location location)
     {
-        FusionTP.sendConsoleInfo("Checking location for safety: (" + location.getX() + ", " + location.getY() + ", " +
-                location.getZ() + ") in world " + location.getWorld().getName());
-        
         // Todo: Add a config option to block problematic blocks (such as BiomesOP Ash)
         Block bot = world.getBlockAt(location);
         if (bot.isLiquid() || bot.isEmpty()) {
-            FusionTP.sendConsoleInfo("     Bottom block is NOT SAFE: " + bot.getType());
             return false;
         }
         Block mid = world.getBlockAt(location.add(0,1,0));
         if (mid.getType().isSolid() || mid.isLiquid() || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY_ASH")) {
-            FusionTP.sendConsoleInfo("     Middle block is NOT SAFE: " + mid.getType());
             return false;
         }
         Block top = world.getBlockAt(location.add(0,1,0));
         if (top.getType().isSolid() || top.isLiquid() || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY_ASH")) {
-            FusionTP.sendConsoleInfo("     Top block is NOT SAFE: " + top.getType());
             return false;
         }
-        FusionTP.sendConsoleInfo("     Location is safe: " + bot + ", " + mid + ", " + top);
         
         // Todo: Check block above top block for sand, gravel, etc.
         

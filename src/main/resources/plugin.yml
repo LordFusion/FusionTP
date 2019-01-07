@@ -1,9 +1,9 @@
 name: "FusionTP"
 author: "Lord_Fusion"
-version: "1.163"
+version: "1.176"
 
 main: "io.github.lordfusion.fusiontp.FusionTP"
-softdepend: [Multiverse-Core, WorldBorder]
+softdepend: [Essentials, Multiverse-Core, WorldBorder]
 
 commands:
   fusiontp:

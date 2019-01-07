@@ -34,7 +34,7 @@ public class RtpHandler implements Runnable
         }
         
         // Teleport the player
-        if (this.plugin.onlineTeleport(player, randomLocation)) {
+        if (this.plugin.onlineTeleport(player, randomLocation, true)) {
             player.setMetadata("FSN.RTP.LAST", new LazyMetadataValue(plugin, new Callable<Object>()
             {
                 final Instant time = Instant.now();
@@ -43,13 +43,13 @@ public class RtpHandler implements Runnable
                     return(time);
                 }
             }));
-//            player.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You have been teleported to a random location!");
             FusionTP.sendConsoleInfo("Player was random-teleported: " + player.getName() + " -> (" +
                     randomLocation.getX() + ", " + randomLocation.getY() + ", " + randomLocation.getZ() + ") in world "
                     + randomLocation.getWorld().getName());
         } else {
             player.sendMessage(FusionTP.chatPrefix + ChatColor.RED + "There was an error teleporting you. Try again later.");
-            FusionTP.sendConsoleWarn("Random-teleport FAILED for: " + player.getName());
+            FusionTP.sendConsoleWarn("Random-teleport FAILED for: '" + player.getName() + "' after checking (unknown)"
+                    + " locations.");
         }
     }
 }

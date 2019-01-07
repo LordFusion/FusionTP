@@ -39,9 +39,8 @@ public final class FusionTP extends JavaPlugin
             sendConsoleInfo("No config found. Generating...");
             this.saveDefaultConfig();
         } else if (this.getConfig().getInt("version") != supportedConfigVersion) {
-                sendConsoleInfo("Invalid or missing config. Loading from defaults.");
-                this.getConfig().options().copyDefaults(true);
-                this.saveConfig();
+            sendConsoleInfo("Invalid or missing config. Loading from defaults.");
+            this.saveDefaultConfig();
         } else {
             sendConsoleInfo("Config file verified.");
         }
@@ -96,7 +95,7 @@ public final class FusionTP extends JavaPlugin
         }
         /* Fusion Test */
         else if (cmd.getName().equalsIgnoreCase("fusiontest")) {
-            fusionTest(sender);
+            fusionTest(((Player)sender).getPlayer());
         }
         return false;
     }
@@ -131,7 +130,7 @@ public final class FusionTP extends JavaPlugin
         if (originPlayer.isOnline()) { // Online TP
             Player onOriginPlayer = originPlayer.getPlayer();
             if (destinationPlayer.isOnline()) { // Online player to online player
-                if (onlineTeleport(onOriginPlayer, destinationPlayer.getPlayer().getLocation())) {
+                if (onlineTeleport(onOriginPlayer, destinationPlayer.getPlayer().getLocation(), false)) {
                     sender.sendMessage("[FSN-TP] Teleported player '" + onOriginPlayer.getName() + "' to '" +
                         destinationPlayer.getName() + "'.");
                 } else {
@@ -216,7 +215,9 @@ public final class FusionTP extends JavaPlugin
         Player player = ((Player) sender).getPlayer();
         
         // Check if the command is off of cooldown
-        if (player.hasMetadata("FSN.RTP.LAST") && !player.getMetadata("FSN.RTP.LAST").isEmpty() && !player.isOp()
+        if (player.hasMetadata("FSN.RTP.LAST") &&
+                !player.getMetadata("FSN.RTP.LAST").isEmpty() &&
+                !player.isOp()
                 && !player.hasPermission("fusion.tp.nodelay.cooldown")) {
             MetadataValue mdValue = player.getMetadata("FSN.RTP.LAST").get(0);
             Instant lastCalled = Instant.parse(mdValue.asString());
@@ -226,7 +227,7 @@ public final class FusionTP extends JavaPlugin
                 sender.sendMessage(chatPrefix + ChatColor.RED + "You must wait " + Instant.now()
                         .until(nextCallAvailable, ChronoUnit.SECONDS) + " seconds before using RTP again!");
                 sendConsoleInfo("Player attempted to use RTP, but they are on cooldown: "
-                        + ((Player) sender).getName());
+                        + sender.getName());
                 return true;
             }
         }
@@ -238,18 +239,27 @@ public final class FusionTP extends JavaPlugin
     
     /**
      * I use this method to test things. You should never expect any form of real documentation around these parts.
-     * @param sender Command sender
+     * @param player Command sender
      */
-    private void fusionTest(CommandSender sender)
+    private void fusionTest(Player player)
     {
-        World world = WorldHandler.findWorld(0);
-        if (world == null) {
-            sender.sendMessage("Failed!");
-            return;
+        boolean mdValueRefined;
+        if (player.getMetadata("FSN.NOTP").isEmpty()) {
+            mdValueRefined = true;
+        } else {
+            MetadataValue mdValueRaw = player.getMetadata("FSN.NOTP").get(0);
+            mdValueRefined = mdValueRaw.asBoolean();
         }
-        UUID worldId = world.getUID();
-        sender.sendMessage(String.valueOf(worldId.getLeastSignificantBits()));
-        sender.sendMessage(String.valueOf(worldId.getMostSignificantBits()));
+        sendConsoleInfo("'" + player.getName() + "' NoTP set to " + !mdValueRefined);
+        
+        player.setMetadata("FSN.NOTP", new LazyMetadataValue(this, new Callable<Object>()
+        {
+            final Boolean bool = !mdValueRefined;
+            public Boolean call() throws Exception
+            {
+                return(bool);
+            }
+        }));
     }
     
     /* METHODS ********************************************************************************************** METHODS */
@@ -287,26 +297,24 @@ public final class FusionTP extends JavaPlugin
      * Teleport an online player.
      * @param sender Player to be teleported
      * @param destination New location for the player
+     * @param ensureLoadedLanding Make sure that the destination chunk is loaded and ready before teleporting
      * @return True if the teleport is successful, false otherwise
      */
-    boolean onlineTeleport(Player sender, Location destination)
+    boolean onlineTeleport(Player sender, Location destination, boolean ensureLoadedLanding)
     {
         double tpWarmup;
         if (sender.isOp() || sender.hasPermission("fusion.tp.nodelay.warmup")) {
             tpWarmup = 0;
-            sendConsoleInfo("User has permission to bypass the warmup!");
         } else if (Bukkit.getPluginManager().isPluginEnabled("Essentials")) {
             tpWarmup = Bukkit.getPluginManager().getPlugin("Essentials").getConfig()
-                    .getDouble("teleport-cooldown");
-            sendConsoleInfo("Warmup timer used from Essentials config: " + (long)(tpWarmup*20));
+                    .getDouble("teleport-delay");
         } else {
             tpWarmup = 0;
-            sendConsoleInfo("No config, no warmup!");
         }
         
         if (tpWarmup > 0) {
             sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "Teleportation will commence in " +
-                    ChatColor.GOLD + (int)tpWarmup + "seconds. Don't move.");
+                    ChatColor.GOLD + (int)tpWarmup + " seconds" + ChatColor.LIGHT_PURPLE + ". Don't move.");
         }
         
         Bukkit.getScheduler().runTaskLater(this, () -> {
@@ -323,8 +331,8 @@ public final class FusionTP extends JavaPlugin
                 repeat++;
             }
             sender.teleport(destination.add(0.5, 0, 0.5));
+            sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You were teleported!");
         }, (long)(tpWarmup*20));
-        sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You were teleported!");
         return true;
     }
     
