@@ -234,6 +234,7 @@ public final class FusionTP extends JavaPlugin
             sender.sendMessage(chatPrefix + ChatColor.RED + "RTP is not allowed in this world!");
             sendConsoleInfo("Player attempted to use RTP in world '" + player.getWorld().getName() + ": "
                     + sender.getName());
+            return true;
         }
         
         // Check if the command is off of cooldown
