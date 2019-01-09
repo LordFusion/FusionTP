@@ -1,5 +1,7 @@
 package io.github.lordfusion.fusiontp;
 
+import com.earth2me.essentials.Essentials;
+import com.earth2me.essentials.User;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -8,6 +10,8 @@ import org.bukkit.metadata.LazyMetadataValue;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
+
+
 
 import java.io.File;
 import java.time.Instant;
@@ -357,6 +361,11 @@ public final class FusionTP extends JavaPlugin
             }
             sender.teleport(destination.add(0.5, 0, 0.5));
             sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You were teleported!");
+            
+            // Essentials /back support
+            User essentialsUser = ((Essentials)(getServer().getPluginManager().getPlugin("Essentials")))
+                    .getUser(sender.getName());
+            essentialsUser.setLastLocation(destination);
         }, (long)(tpWarmup*20));
         return true;
     }
@@ -370,7 +379,14 @@ public final class FusionTP extends JavaPlugin
     private boolean offlineTeleport(OfflinePlayer player, Location destination)
     {
         PlayerHandler offlinePlayer = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()));
-        return(offlinePlayer.setPlayerLocation(destination));
+        if (offlinePlayer.setPlayerLocation(destination)) {
+            User essentialsUser = ((Essentials)(getServer().getPluginManager().getPlugin("Essentials")))
+                    .getOfflineUser(player.getName());
+            essentialsUser.setLastLocation(destination);
+            return true;
+        } else {
+            return false;
+        }
     }
     
     /* STATIC METHODS ******************************************************************************** STATIC METHODS */
