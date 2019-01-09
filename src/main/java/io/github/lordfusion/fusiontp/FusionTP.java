@@ -347,6 +347,8 @@ public final class FusionTP extends JavaPlugin
         }
         
         Bukkit.getScheduler().runTaskLater(this, () -> {
+            Location originalLocation = sender.getLocation();
+            
             World destWorld = Bukkit.getWorld(destination.getWorld().getUID());
             Chunk destChunk = destWorld.getChunkAt(destination);
             int repeat = 0;
@@ -365,7 +367,7 @@ public final class FusionTP extends JavaPlugin
             // Essentials /back support
             User essentialsUser = ((Essentials)(getServer().getPluginManager().getPlugin("Essentials")))
                     .getUser(sender.getName());
-            essentialsUser.setLastLocation(destination);
+            essentialsUser.setLastLocation(originalLocation);
         }, (long)(tpWarmup*20));
         return true;
     }
@@ -378,11 +380,14 @@ public final class FusionTP extends JavaPlugin
      */
     private boolean offlineTeleport(OfflinePlayer player, Location destination)
     {
+        Location originalLocation = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()))
+               .getPlayerLocation();
+        
         PlayerHandler offlinePlayer = new PlayerHandler(PlayerHandler.findPlayerFile(player.getUniqueId()));
         if (offlinePlayer.setPlayerLocation(destination)) {
             User essentialsUser = ((Essentials)(getServer().getPluginManager().getPlugin("Essentials")))
                     .getOfflineUser(player.getName());
-            essentialsUser.setLastLocation(destination);
+            essentialsUser.setLastLocation(originalLocation);
             return true;
         } else {
             return false;
