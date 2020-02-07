@@ -1,3 +1,4 @@
+![Fusion Logo](https://i.imgur.com/pa9g9Kc.png)
 # FusionTP
 A broad teleportation plugin for Bukkit-based servers.
 Designed for 1.7.10. Working on 1.7.10.
