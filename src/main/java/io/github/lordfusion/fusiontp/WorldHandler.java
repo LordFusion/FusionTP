@@ -3,11 +3,13 @@ package io.github.lordfusion.fusiontp;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.wimbli.WorldBorder.BorderData;
 import com.wimbli.WorldBorder.WorldBorder;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.block.Block;
 import org.bukkit.plugin.Plugin;
 
-import javax.swing.border.Border;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -45,7 +47,7 @@ public class WorldHandler
         try {
             this.fileContents = NbtManager.loadFile(levelDatFile);
         } catch (IOException exc) {
-            Bukkit.getServer().getLogger().warning("[Fusion TP] ERROR: FAILED TO READ WORLD DAT FILE.");
+            FusionTP.sendConsoleWarn("ERROR: FAILED TO READ WORLD DAT FILE.");
         }
         this.fileLocation = levelDatFile;
         this.world = bukkitWorld;
@@ -180,11 +182,15 @@ public class WorldHandler
             return false;
         }
         Block mid = world.getBlockAt(location.add(0,1,0));
-        if (mid.getType().isSolid() || mid.isLiquid() || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY_ASH")) {
+        if (mid.getType().isSolid() || mid.isLiquid()
+                || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY")
+                || mid.getType().toString().contains("netherore")) {
             return false;
         }
         Block top = world.getBlockAt(location.add(0,1,0));
-        if (top.getType().isSolid() || top.isLiquid() || mid.getType().toString().equalsIgnoreCase("BIOMESOPLENTY_ASH")) {
+        if (top.getType().isSolid() || top.isLiquid()
+                || top.getType().toString().equalsIgnoreCase("BIOMESOPLENTY")
+                || mid.getType().toString().contains("netherore")) {
             return false;
         }
         

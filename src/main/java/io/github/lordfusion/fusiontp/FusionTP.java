@@ -233,9 +233,9 @@ public final class FusionTP extends JavaPlugin
         Player player = ((Player) sender).getPlayer();
         
         // Check if RandomTP is allowed in the player's world
-        if (Arrays.stream(this.listedWorlds).anyMatch(player.getWorld().getName()::equals) &&
+        if (Arrays.asList(this.listedWorlds).contains(player.getWorld().getName()) &&
                 !this.worldWhitelistEnabled ||
-                !Arrays.stream(this.listedWorlds).anyMatch(player.getWorld().getName()::equals) &&
+                Arrays.stream(this.listedWorlds).noneMatch(player.getWorld().getName()::equals) &&
                 this.worldWhitelistEnabled) {
             sender.sendMessage(chatPrefix + ChatColor.RED + "RTP is not allowed in this world!");
             sendConsoleInfo("Player attempted to use RTP in world '" + player.getWorld().getName() + ": "
