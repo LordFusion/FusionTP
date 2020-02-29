@@ -3,6 +3,7 @@ package io.github.lordfusion.fusiontp.commands;
 import io.github.lordfusion.fusiontp.DataManager;
 import io.github.lordfusion.fusiontp.FusionTP;
 import io.github.lordfusion.fusiontp.utilities.Teleporter;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -12,8 +13,13 @@ import org.bukkit.entity.Player;
 
 public class TeleportHere implements CommandExecutor
 {
-    private static TextComponent ERROR_CONSOLE, ERROR_INVALID_TARGET, ERROR_FAILURE,
+    private static TextComponent ERROR_CONSOLE, ERROR_INVALID_SOURCE, ERROR_FAILURE,
             SUCCESS_TARGET, SUCCESS_COMMANDSENDER;
+    
+    public TeleportHere()
+    {
+        this.setupMessages();
+    }
     
     /**
      * Executes the given command, returning its success.
@@ -37,24 +43,42 @@ public class TeleportHere implements CommandExecutor
             return true;
         }
     
-        OfflinePlayer source = ((Player)sender).getPlayer();
-        OfflinePlayer target = DataManager.findPlayer(args[0]);
+        OfflinePlayer source = DataManager.findPlayer(args[0]);
+        OfflinePlayer target = ((Player)sender).getPlayer();
         
-        if (target == null) {
-            TextComponent msg = (TextComponent)ERROR_INVALID_TARGET.duplicate();
+        if (source == null) {
+            TextComponent msg = (TextComponent) ERROR_INVALID_SOURCE.duplicate();
             msg.addExtra('\"' + args[0] + '\"');
             FusionTP.sendUserMessage(sender, msg);
-            FusionTP.sendConsoleInfo("Failed to teleport; invalid target.");
+            FusionTP.sendConsoleInfo("Failed to teleport; invalid source.");
             return true;
         }
     
         if (Teleporter.teleport(source, target)) {
             FusionTP.sendUserMessage(sender, SUCCESS_COMMANDSENDER);
-            if (target.isOnline())
-                FusionTP.sendUserMessage(sender, SUCCESS_TARGET);
+            if (source.isOnline())
+                FusionTP.sendUserMessage((CommandSender)source, SUCCESS_TARGET);
         } else {
             FusionTP.sendUserMessage(sender, ERROR_FAILURE);
         }
         return true;
+    }
+    
+    private void setupMessages()
+    {
+        ERROR_CONSOLE = new TextComponent("Console cannot use this command.");
+        ERROR_CONSOLE.setColor(ChatColor.DARK_RED);
+        
+        ERROR_INVALID_SOURCE = new TextComponent("Invalid player: ");
+        ERROR_INVALID_SOURCE.setColor(ChatColor.RED);
+        
+        ERROR_FAILURE = new TextComponent("Teleport failed.");
+        ERROR_FAILURE.setColor(ChatColor.RED);
+        
+        SUCCESS_COMMANDSENDER = new TextComponent("Teleported!");
+        SUCCESS_COMMANDSENDER.setColor(ChatColor.GREEN);
+        
+        SUCCESS_TARGET = new TextComponent("You were teleported.");
+        SUCCESS_TARGET.setColor(ChatColor.GREEN);
     }
 }
