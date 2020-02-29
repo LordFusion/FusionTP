@@ -2,7 +2,9 @@ package io.github.lordfusion.fusiontp;
 
 import com.earth2me.essentials.Essentials;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -11,6 +13,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+
+import static org.bukkit.Bukkit.getServer;
 
 public class DataManager
 {
@@ -189,5 +193,22 @@ public class DataManager
     public Essentials getEssentials()
     {
         return (Essentials)this.essentials;
+    }
+    
+    // Info-Seeking ************************************************************************************ Info-Seeking //
+    /**
+     * Find a player by their username.
+     * @param username - Partial or full username to be found
+     * @return A player matching the given search term, null if not found.
+     */
+    public static OfflinePlayer findPlayer(String username)
+    {
+        for (Player onPlayer : getServer().getOnlinePlayers())
+            if (onPlayer.getName().toLowerCase().contains(username.toLowerCase()))
+                return onPlayer;
+        for (OfflinePlayer offPlayer : getServer().getOfflinePlayers())
+            if (offPlayer.getName().toLowerCase().contains(username.toLowerCase()))
+                return offPlayer;
+        return null;
     }
 }
