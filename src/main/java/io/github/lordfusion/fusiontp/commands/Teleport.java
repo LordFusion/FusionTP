@@ -16,7 +16,7 @@ import org.bukkit.entity.Player;
  */
 public class Teleport implements CommandExecutor
 {
-    private static TextComponent ERROR_CONSOLE, ERROR_PERMISSION, ERROR_INVALID_TARGET, ERROR_INVALD_SOURCE, ERROR_FAILURE,
+    private static TextComponent ERROR_CONSOLE, ERROR_PERMISSION, ERROR_INVALID_TARGET, ERROR_INVALID_SOURCE, ERROR_FAILURE,
             SUCCESS_COMMANDSENDER, SUCCESS_SOURCE;
     
     public Teleport()
@@ -69,7 +69,7 @@ public class Teleport implements CommandExecutor
         } else { // Teleport args[0] to args[1]
             source = DataManager.findPlayer(args[0]);
             if (source == null) {
-                TextComponent msg = (TextComponent)ERROR_INVALD_SOURCE.duplicate();
+                TextComponent msg = (TextComponent) ERROR_INVALID_SOURCE.duplicate();
                 msg.addExtra('\"' + args[0] + '\"');
                 FusionTP.sendUserMessage(sender, msg);
                 FusionTP.sendConsoleInfo("Failed to teleport; invalid source.");
@@ -117,8 +117,8 @@ public class Teleport implements CommandExecutor
         ERROR_INVALID_TARGET = new TextComponent("Invalid target: ");
         ERROR_INVALID_TARGET.setColor(ChatColor.RED);
         
-        ERROR_INVALD_SOURCE = new TextComponent("Invalid source: ");
-        ERROR_INVALD_SOURCE.setColor(ChatColor.RED);
+        ERROR_INVALID_SOURCE = new TextComponent("Invalid source: ");
+        ERROR_INVALID_SOURCE.setColor(ChatColor.RED);
         
         ERROR_FAILURE = new TextComponent("Teleport failed.");
         ERROR_FAILURE.setColor(ChatColor.RED);
