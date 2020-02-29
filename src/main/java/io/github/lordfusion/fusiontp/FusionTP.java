@@ -2,6 +2,10 @@ package io.github.lordfusion.fusiontp;
 
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
+import io.github.lordfusion.fusiontp.commands.RandomTeleport;
+import io.github.lordfusion.fusiontp.commands.SpawnTeleport;
+import io.github.lordfusion.fusiontp.commands.Teleport;
+import io.github.lordfusion.fusiontp.commands.TeleportHere;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,14 +34,21 @@ public final class FusionTP extends JavaPlugin
 {
     static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
     static final String consolePrefix = "[Fusion Teleport] ";
+    private static FusionTP INSTANCE;
     
     private DataManager dataManager;
     
     public void onEnable()
     {
         sendConsoleInfo("What's up boys and girls, it's ya boi, FusionTP.");
-        
         this.dataManager = new DataManager(this.getDataFolder().getAbsolutePath());
+        INSTANCE = this;
+        
+        // Commands
+        getCommand("fusiontp").setExecutor(new Teleport());
+        getCommand("fusiontphere").setExecutor(new TeleportHere());
+        getCommand("fusionspawntp").setExecutor(new SpawnTeleport());
+        getCommand("fusionrandomtp").setExecutor(new RandomTeleport());
     }
     
     /**
