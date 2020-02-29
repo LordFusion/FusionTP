@@ -2,12 +2,7 @@ package io.github.lordfusion.fusiontp;
 
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.Chunk;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -16,10 +11,10 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 
@@ -33,38 +28,16 @@ import java.util.concurrent.Callable;
  */
 public final class FusionTP extends JavaPlugin
 {
-    static final int supportedConfigVersion = 3;
-    
     static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
     static final String consolePrefix = "[Fusion Teleport] ";
     
-    boolean worldWhitelistEnabled = false;
-    String[] listedWorlds;
+    private DataManager dataManager;
     
     public void onEnable()
     {
         sendConsoleInfo("What's up boys and girls, it's ya boi, FusionTP.");
-        getServer().getPluginManager().registerEvents(new ListenerHandler(), this);
         
-        File configFile = new File(this.getDataFolder(), "config.yml");
-        
-        if (!configFile.exists()) {
-            sendConsoleInfo("No config found. Generating...");
-            this.saveDefaultConfig();
-        } else if (this.getConfig().getInt("version") != supportedConfigVersion) {
-            sendConsoleInfo("Invalid or missing config. Loading from defaults.");
-            if (!configFile.renameTo(new File(configFile.getParentFile().getPath() + "/config-backup.yml")))
-                configFile.delete();
-            this.saveDefaultConfig();
-        } else {
-            sendConsoleInfo("Config file verified.");
-        }
-        
-        // Read white- or black-listed worlds
-        this.worldWhitelistEnabled = this.getConfig().getBoolean("rtpWorldWhitelist");
-        this.listedWorlds = this.getConfig().getStringList("rtpWorlds").toArray(new String[0]);
-        if (this.listedWorlds.length == 0)
-            this.listedWorlds = null;
+        this.dataManager = new DataManager(this.getDataFolder().getAbsolutePath());
     }
     
     /**
@@ -236,10 +209,9 @@ public final class FusionTP extends JavaPlugin
         Player player = ((Player) sender).getPlayer();
         
         // Check if RandomTP is allowed in the player's world
-        if (Arrays.asList(this.listedWorlds).contains(player.getWorld().getName()) &&
-                !this.worldWhitelistEnabled ||
-                Arrays.stream(this.listedWorlds).noneMatch(player.getWorld().getName()::equals) &&
-                this.worldWhitelistEnabled) {
+        List<String> listedWorlds = Arrays.asList(this.dataManager.getWorldList());
+        if (listedWorlds.contains(player.getWorld().getName()) && !this.dataManager.doWorldWhitelist() ||
+                !listedWorlds.contains(player.getWorld().getName()) && this.dataManager.doWorldWhitelist()) {
             sender.sendMessage(chatPrefix + ChatColor.RED + "RTP is not allowed in this world!");
             sendConsoleInfo("Player attempted to use RTP in world '" + player.getWorld().getName() + ": "
                     + sender.getName());
