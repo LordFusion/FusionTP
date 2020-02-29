@@ -6,6 +6,8 @@ import io.github.lordfusion.fusiontp.commands.RandomTeleport;
 import io.github.lordfusion.fusiontp.commands.SpawnTeleport;
 import io.github.lordfusion.fusiontp.commands.Teleport;
 import io.github.lordfusion.fusiontp.commands.TeleportHere;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -32,8 +34,8 @@ import java.util.concurrent.Callable;
  */
 public final class FusionTP extends JavaPlugin
 {
-    static final String chatPrefix = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
-    static final String consolePrefix = "[Fusion Teleport] ";
+    static final String CHAT_PREFIX = ChatColor.GRAY + "[" + ChatColor.DARK_PURPLE + "FSN-TP" + ChatColor.GRAY + "] ";
+    static final String CONSOLE_PREFIX = "[Fusion Teleport] ";
     private static FusionTP INSTANCE;
     
     private DataManager dataManager;
@@ -223,7 +225,7 @@ public final class FusionTP extends JavaPlugin
         List<String> listedWorlds = Arrays.asList(this.dataManager.getWorldList());
         if (listedWorlds.contains(player.getWorld().getName()) && !this.dataManager.doWorldWhitelist() ||
                 !listedWorlds.contains(player.getWorld().getName()) && this.dataManager.doWorldWhitelist()) {
-            sender.sendMessage(chatPrefix + ChatColor.RED + "RTP is not allowed in this world!");
+            sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "RTP is not allowed in this world!");
             sendConsoleInfo("Player attempted to use RTP in world '" + player.getWorld().getName() + ": "
                     + sender.getName());
             return true;
@@ -239,7 +241,7 @@ public final class FusionTP extends JavaPlugin
             int rtpDelay = this.getConfig().getInt("rtpDelay");
             Instant nextCallAvailable = lastCalled.plus(rtpDelay, ChronoUnit.SECONDS);
             if (nextCallAvailable.isAfter(Instant.now())) {
-                sender.sendMessage(chatPrefix + ChatColor.RED + "You must wait " + Instant.now()
+                sender.sendMessage(CHAT_PREFIX + ChatColor.RED + "You must wait " + Instant.now()
                         .until(nextCallAvailable, ChronoUnit.SECONDS) + " seconds before using RTP again!");
                 sendConsoleInfo("Player attempted to use RTP, but they are on cooldown: "
                         + sender.getName());
@@ -247,7 +249,7 @@ public final class FusionTP extends JavaPlugin
             }
         }
         
-        player.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "Finding a safe location to land...");
+        player.sendMessage(FusionTP.CHAT_PREFIX + ChatColor.LIGHT_PURPLE + "Finding a safe location to land...");
         Bukkit.getScheduler().runTaskAsynchronously(this, new RtpHandler(this, player));
         return true;
     }
@@ -328,7 +330,7 @@ public final class FusionTP extends JavaPlugin
         }
         
         if (tpWarmup > 0) {
-            sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "Teleportation will commence in " +
+            sender.sendMessage(FusionTP.CHAT_PREFIX + ChatColor.LIGHT_PURPLE + "Teleportation will commence in " +
                     ChatColor.GOLD + (int)tpWarmup + " seconds" + ChatColor.LIGHT_PURPLE + ". Don't move.");
         }
         
@@ -348,7 +350,7 @@ public final class FusionTP extends JavaPlugin
                 repeat++;
             }
             sender.teleport(destination.add(0.5, 0, 0.5));
-            sender.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "You were teleported!");
+            sender.sendMessage(FusionTP.CHAT_PREFIX + ChatColor.LIGHT_PURPLE + "You were teleported!");
             
             // Essentials /back support
             User essentialsUser = ((Essentials)(getServer().getPluginManager().getPlugin("Essentials")))
@@ -380,23 +382,45 @@ public final class FusionTP extends JavaPlugin
         }
     }
     
-    /* STATIC METHODS ******************************************************************************** STATIC METHODS */
+    // MESSAGING ****************************************************************************************** MESSAGING //
     
     /**
      * Sends a message to the server console, with the Info priority level.
      * @param message Message for console
      */
-    static void sendConsoleInfo(String message)
+    public static void sendConsoleInfo(String message)
     {
-        Bukkit.getServer().getLogger().info(consolePrefix + message);
+        Bukkit.getServer().getLogger().info(CONSOLE_PREFIX + message);
     }
     
     /**
      * Sends a message to the server console, with the Warning priority level.
      * @param message Message for console
      */
-    static void sendConsoleWarn(String message)
+    public static void sendConsoleWarn(String message)
     {
-        Bukkit.getServer().getLogger().warning(consolePrefix + message);
+        Bukkit.getServer().getLogger().warning(CONSOLE_PREFIX + message);
+    }
+    
+    public static void sendUserMessage(CommandSender sender, TextComponent msg)
+    {
+        if (sender instanceof Player)
+            ((Player)sender).spigot().sendMessage(msg);
+        else {
+            if (msg.getExtra() != null) {
+                StringBuilder line = new StringBuilder(msg.getText());
+                for (BaseComponent extra : msg.getExtra())
+                    line.append(((TextComponent)extra).getText());
+                sender.sendMessage(line.toString());
+            } else {
+                sender.sendMessage(msg.getText());
+            }
+        }
+    }
+    
+    public static void sendUserMessages(CommandSender sender, TextComponent[] msgs)
+    {
+        for (TextComponent msg : msgs)
+            sendUserMessage(sender, msg);
     }
 }
