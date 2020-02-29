@@ -28,7 +28,7 @@ public class RtpHandler implements Runnable
         
         // Make sure the location exists.
         if (randomLocation == null) {
-            player.sendMessage(FusionTP.chatPrefix + ChatColor.LIGHT_PURPLE + "A safe location was not found.");
+            player.sendMessage(FusionTP.CHAT_PREFIX + ChatColor.LIGHT_PURPLE + "A safe location was not found.");
             FusionTP.sendConsoleWarn("Random-teleport FAILED for: " + player.getName());
             return;
         }
@@ -47,7 +47,7 @@ public class RtpHandler implements Runnable
                     randomLocation.getX() + ", " + randomLocation.getY() + ", " + randomLocation.getZ() + ") in world "
                     + randomLocation.getWorld().getName());
         } else {
-            player.sendMessage(FusionTP.chatPrefix + ChatColor.RED + "There was an error teleporting you. Try again later.");
+            player.sendMessage(FusionTP.CHAT_PREFIX + ChatColor.RED + "There was an error teleporting you. Try again later.");
             FusionTP.sendConsoleWarn("Random-teleport FAILED for: '" + player.getName() + "' after checking (unknown)"
                     + " locations.");
         }
