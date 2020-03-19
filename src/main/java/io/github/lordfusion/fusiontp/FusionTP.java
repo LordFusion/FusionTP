@@ -53,6 +53,15 @@ public final class FusionTP extends JavaPlugin
         getCommand("fusionrandomtp").setExecutor(new RandomTeleport());
     }
     
+    public static FusionTP getInstance()
+    {
+        return INSTANCE;
+    }
+    public DataManager getDataManager()
+    {
+        return this.dataManager;
+    }
+    
     /**
      * Executes a given Fusion command.
      * @param sender - Source of the command
@@ -107,7 +116,7 @@ public final class FusionTP extends JavaPlugin
         return false;
     }
     
-    /* COMMANDS ******************************************************************************************** COMMANDS */
+    // COMMANDS ******************************************************************************************** COMMANDS //
     
     /**
      * Teleport one player to another player.
@@ -279,7 +288,7 @@ public final class FusionTP extends JavaPlugin
         }));
     }
     
-    /* METHODS ********************************************************************************************** METHODS */
+    // METHODS ********************************************************************************************** METHODS //
     
     /**
      * Find a player by their username.
