@@ -176,6 +176,27 @@ public class DataManager
         return true;
     }
     
+    // Metadata ******************************************************************************************** Metadata //
+    /**
+     * Uses metadata to determine whether the player is currently waiting on an RTP cooldown.
+     * @param player Player attempting to RTP.
+     * @return True if they are on cooldown and need to wait. False if ready to teleport.
+     */
+    public boolean isOnRtpCooldown(Player player)
+    {
+        return false;
+    }
+    
+    /**
+     * Uses metadata to set the player onto a cooldown for the RTP command.
+     * Cooldown length determined by the DataManager.
+     * @param player Player who was RTPd.
+     */
+    public void putOnRtpCooldown(Player player)
+    {
+    
+    }
+    
     // Integrations ************************************************************************************ Integrations //
     private boolean checkEssentialsIntegration()
     {
